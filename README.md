@@ -1,3 +1,8 @@
+## Simple Todo App
+This is a simple todo app which i created in process of learning `server actions` in next js.
+Along with `server actions` i also used the `useOptimistic hook` from react and both of these are great pair.
+
+
 This is a [Next.js](https://nextjs.org/) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
 
 ## Getting Started
