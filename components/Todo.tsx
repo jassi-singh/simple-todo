@@ -1,31 +1,54 @@
 "use client";
 import { createTodo } from "@/actions/todo";
 import { Todo } from "@prisma/client";
-import { useOptimistic, useState } from "react";
+import { useEffect, useOptimistic, useState } from "react";
 import TodoItem from "./TodoItem";
 import Input from "./Input";
+import { useRouter } from "next/navigation";
 
 type TodoFormProps = {
   todos: Todo[];
 };
 
 const TodoForm = ({ todos }: TodoFormProps) => {
+  const router = useRouter();
   const [optimisticTodos, setOptimisticTodos] = useOptimistic(
     todos,
     (
       state: Todo[],
-      { value, type }: { value: Todo; type: "create" | "update" | "delete" }
+      {
+        value,
+        type,
+      }: { value: Todo[]; type: "create" | "update" | "delete" | "init" }
     ) => {
       switch (type) {
         case "create":
-          return [...state, value];
+          return [...state, ...value];
         case "update":
-          return [...state.map((e) => (e.id === value.id ? value : e))];
+          return [...state.map((e) => (e.id === value[0].id ? value[0] : e))];
         case "delete":
-          return [...state.filter((e) => e.id !== value.id)];
+          return [...state.filter((e) => e.id !== value[0].id)];
+        case "init":
+          return [...value];
       }
     }
   );
+
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      router.refresh();
+    };
+
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+
+    return () => {
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+    };
+  }, [router]);
+
+  useEffect(() => {
+    setOptimisticTodos({ value: todos, type: "init" });
+  }, [todos]);
 
   const [value, setValue] = useState("");
 
@@ -36,13 +59,13 @@ const TodoForm = ({ todos }: TodoFormProps) => {
   const handleClick = (e: React.MouseEvent<HTMLButtonElement>) => {
     e.preventDefault();
     setOptimisticTodos({
-      value: {
+      value: [{
         id: Date.now().toString(),
         title: value,
         isCompleted: false,
         description: "",
         createdAt: new Date(),
-      },
+      }],
       type: "create",
     });
     createTodo(value);
